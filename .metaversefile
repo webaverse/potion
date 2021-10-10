@@ -7,7 +7,8 @@
       "value": {
         "boneAttachment": "leftHand",
         "position": [0, 0, 0],
-        "quaternion": [0, 0, 0, 1]
+        "quaternion": [0, 0, 0, 1],
+        "scale": [0.5, 0.5, 0.5]
       }
     },
     {
@@ -17,7 +18,7 @@
         "boneAttachment": "leftHand",
         "position": [0, 0, 0],
         "quaternion": [0, 0, 0, 1],
-        "scale": [1, 1, 1]
+        "scale": [0.5, 0.5, 0.5]
       }
     }
   ]

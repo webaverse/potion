@@ -1,6 +1,6 @@
 {
   "name": "potion",
-  "start_url": "potion.glb",
+  "start_url": "index.js",
   "components": [
     {
       "key": "wear",

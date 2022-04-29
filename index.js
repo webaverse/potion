@@ -119,7 +119,7 @@ export default () => {
         dropletAlreadyChangeVelocity: [dropletCount]
     }
     let splashAcc = new THREE.Vector3(0, -0.0015, 0);
-    let dropletAcc = new THREE.Vector3(0, -0.005, 0);
+    let dropletAcc = new THREE.Vector3(0, -0.003, 0);
 
     //##################################################### get geometry #####################################################
     const _getWaterGeometry = geometry => {
@@ -490,7 +490,7 @@ export default () => {
             dummy.scale.z = .00001;
             dummy.position.x = (Math.random()-0.5)*0.2;
             dummy.position.y = -0.2;
-            dummy.position.z = i*0.1;
+            dummy.position.z = i * 20;
             info.dropletVelocity[i] = new THREE.Vector3();
             info.dropletAssignedVelocity[i] = new THREE.Vector3();
             info.dropletVelocity[i].divideScalar(20);
@@ -678,9 +678,9 @@ export default () => {
                             dir.z=dropletStartPoint.z - localPlayer.position.z;
                             dir.normalize();
 
-                            info.dropletVelocity[i].x = -dir.x * 0.25;
+                            info.dropletVelocity[i].x = -dir.x * 0.25+(Math.random()-0.5)*0.1;
                             info.dropletVelocity[i].y = 0;
-                            info.dropletVelocity[i].z = -dir.z * 0.25;
+                            info.dropletVelocity[i].z = -dir.z * 0.25+(Math.random()-0.5)*0.1;
                             info.dropletVelocity[i].divideScalar(20);
 
                             dummy.position.x = dropletStartPoint.x+(Math.random()-0.5)*0.03;
@@ -706,18 +706,22 @@ export default () => {
                         }
                         if(dummy.position.y>-100){
                             if(timestamp - dropletStartTimesAttribute.getX(i)>100 && !info.dropletAlreadyChangeVelocity[i]){
-                                info.dropletVelocity[i].x = info.dropletAssignedVelocity[i].x+(Math.random()-0.5)*0.3;
-                                info.dropletVelocity[i].y = info.dropletAssignedVelocity[i].y;
-                                info.dropletVelocity[i].z = info.dropletAssignedVelocity[i].z+(Math.random()-0.5)*0.3;
-                                info.dropletVelocity[i].divideScalar(20);
+                                if(i % 2 === 0){
+                                    info.dropletVelocity[i].x = info.dropletAssignedVelocity[i].x+(Math.random()-0.5)*0.3;
+                                    info.dropletVelocity[i].y = info.dropletAssignedVelocity[i].y;
+                                    info.dropletVelocity[i].z = info.dropletAssignedVelocity[i].z+(Math.random()-0.5)*0.3;
+                                    info.dropletVelocity[i].divideScalar(20);
+                                }
+                                
                                 info.dropletAlreadyChangeVelocity[i] = true;
-                                info.dropletVelocity[i].add(dropletAcc);
                             }
-                            else{
-                                info.dropletVelocity[i].y += -0.003;
+                           
+                            if(info.dropletAlreadyChangeVelocity[i]){
+                                if(dropletOpacityAttribute.getX(i)>0)
+                                    dropletOpacityAttribute.setX(i, dropletOpacityAttribute.getX(i)-0.03*Math.random());
                             }
                             
-                            
+                            info.dropletVelocity[i].add(dropletAcc);
                             
                             
 
@@ -732,7 +736,7 @@ export default () => {
                                 dummy.scale.z +=0.0135/2;
                             }
                             else if(dummy.scale.x>=0.02){
-                                dummy.scale.z *=1.01;
+                                dummy.scale.z *=(1 + Math.random()*0.03);
                             }
 
                             localVector.copy(dummy.position).add(localVector2);

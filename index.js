@@ -617,9 +617,9 @@ export default () => {
 
                         if(dummy.position.y<localPlayer.position.y - localPlayer.avatar.height && count< maxSplashParticleCount && timestamp - lastSplash > 150){
                             splashOpacityAttribute.setX(i, 0);
-                            dummy.scale.x = (0.07+Math.random()*0.1)*0.25;
-                            dummy.scale.y = (0.07+Math.random()*0.1)*0.25;
-                            dummy.scale.z = (0.2+Math.random()*0.15)*0.25;
+                            dummy.scale.x = (0.07+Math.random()*0.1)*0.3;
+                            dummy.scale.y = (0.07+Math.random()*0.1)*0.3;
+                            dummy.scale.z = (0.2+Math.random()*0.15)*0.3;
 
                             let rand = (Math.random()-0.5)*0.02;
                             dir.x=splashStartPoint.x-(localPlayer.position.x + rand * localVector2.x);
@@ -751,6 +751,20 @@ export default () => {
                 }
                 else{
                     if(particleInScene){
+                        for (let i = 0; i < dropletCount; i++) {
+                            dropletMesh.getMatrixAt(i, matrix);
+                            matrix.decompose(dummy.position, dummy.quaternion, dummy.scale);
+                            dummy.position.set(0,-100,0);
+                            dummy.updateMatrix();
+                            dropletMesh.setMatrixAt(i, dummy.matrix);
+                        }
+                        for (let i = 0; i < splashCount; i++) {
+                            splashMesh.getMatrixAt(i, matrix);
+                            matrix.decompose(dummy.position, dummy.quaternion, dummy.scale);
+                            dummy.position.set(0,-100,0);
+                            dummy.updateMatrix();
+                            splashMesh.setMatrixAt(i, dummy.matrix);
+                        }
                         scene.remove(group2);
                         scene.remove(splashMesh);
                         scene.remove(dropletMesh);
@@ -766,6 +780,20 @@ export default () => {
             }
             else{
                 if(particleInScene){
+                    for (let i = 0; i < dropletCount; i++) {
+                        dropletMesh.getMatrixAt(i, matrix);
+                        matrix.decompose(dummy.position, dummy.quaternion, dummy.scale);
+                        dummy.position.set(0,-100,0);
+                        dummy.updateMatrix();
+                        dropletMesh.setMatrixAt(i, dummy.matrix);
+                    }
+                    for (let i = 0; i < splashCount; i++) {
+                        splashMesh.getMatrixAt(i, matrix);
+                        matrix.decompose(dummy.position, dummy.quaternion, dummy.scale);
+                        dummy.position.set(0,-100,0);
+                        dummy.updateMatrix();
+                        splashMesh.setMatrixAt(i, dummy.matrix);
+                    }
                     scene.remove(group2);
                     scene.remove(splashMesh);
                     scene.remove(dropletMesh);

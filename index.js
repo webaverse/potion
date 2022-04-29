@@ -108,7 +108,7 @@ export default () => {
     //############################################################### water ########################################################################
     const waterCount = 50;
     const splashCount = 7;
-    const dropletCount = 7;
+    const dropletCount = 10;
     const group1=new THREE.Group();
     const group2=new THREE.Group();
     let info = {
@@ -426,9 +426,9 @@ export default () => {
         const geometry = _getWaterGeometry(geometry2);
         waterMesh = new THREE.InstancedMesh(geometry, waterMaterial, waterCount);
         group1.add(waterMesh);
-        //group1.position.x += 0.03;
-        group1.position.y += 0.01;
-        group1.rotation.y = Math.PI / 19;
+        group1.position.x += 0.05;
+        group1.position.y += 0.03;
+        // group1.rotation.y = Math.PI / 19;
         group1.rotation.x = Math.PI / 4;
         
         group2.add(group1)
@@ -538,10 +538,10 @@ export default () => {
 
             dropletStartPoint.copy(localPlayer.position);
             if (localPlayer.avatar) {
-                dropletStartPoint.y = localPlayer.avatar.height+0.05;
+                dropletStartPoint.y = localPlayer.avatar.height+0.07;
             }
-            dropletStartPoint.x+=0.1*currentDir.x;
-            dropletStartPoint.z+=0.1*currentDir.z;
+            dropletStartPoint.x+=0.01*currentDir.x;
+            dropletStartPoint.z+=0.01*currentDir.z;
             
                
             //############################ water attribute ############################
@@ -583,7 +583,7 @@ export default () => {
                             
                             dummy.position.x = (Math.random()-0.5)*0.0125;
                             dummy.position.y = (Math.random()-0.5)*0.0125;
-                            dummy.position.z = 0.15+(Math.random()-0.5)*0.0125;
+                            dummy.position.z = 0.18+(Math.random()-0.5)*0.0125;
 
                             dummy.rotation.z = (Math.random()-0.5) * 2 * Math.PI;
                             info.waterVelocity[i].x=(Math.random()-0.5)*0.075;
@@ -668,28 +668,36 @@ export default () => {
                         dropletMesh.getMatrixAt(i, matrix);
                         matrix.decompose(dummy.position, dummy.quaternion, dummy.scale);
                         if(dummy.position.y < localPlayer.position.y - localPlayer.avatar.height + 0.2 && count < maxDropletParticleCount){
-                            dropletOpacityAttribute.setX(i, 0.6);
-                            dummy.scale.x = (0.06+Math.random()*0.05)*0.002;
-                            dummy.scale.y = (0.06+Math.random()*0.05)*0.002;
-                            dummy.scale.z = (0.15+Math.random()*0.05)*0.002;
+                            dropletOpacityAttribute.setX(i, 0.9);
+                            dummy.scale.x = (0.06+Math.random()*0.05)*0.2;
+                            dummy.scale.y = (0.06+Math.random()*0.05)*0.2;
+                            dummy.scale.z = (0.15+Math.random()*0.05)*0.2;
+
+
+                            dir.x=dropletStartPoint.x - localPlayer.position.x;
+                            dir.z=dropletStartPoint.z - localPlayer.position.z;
+                            dir.normalize();
+
+                            info.dropletVelocity[i].x = -dir.x * 0.25;
+                            info.dropletVelocity[i].y = 0;
+                            info.dropletVelocity[i].z = -dir.z * 0.25;
+                            info.dropletVelocity[i].divideScalar(20);
+
+                            dummy.position.x = dropletStartPoint.x+(Math.random()-0.5)*0.03;
+                            dummy.position.y = dropletStartPoint.y+(Math.random()-0.5)*0.03;
+                            dummy.position.z = dropletStartPoint.z+(Math.random()-0.5)*0.03;
+
 
                             let rand = (Math.random()-0.5)*0.2;
                             dir.x=dropletStartPoint.x-(localPlayer.position.x + rand * localVector2.x);
                             dir.z=dropletStartPoint.z-(localPlayer.position.z + rand * localVector2.z);
                             dir.normalize();
 
-                            dummy.position.x = dropletStartPoint.x - 0.1 * localVector2.x;
-                            dummy.position.y = dropletStartPoint.y;
-                            dummy.position.z = dropletStartPoint.z - 0.1 * localVector2.z;
-
                             info.dropletAssignedVelocity[i].x = -dir.x*0.5;
                             info.dropletAssignedVelocity[i].y = Math.random()*0.5;
                             info.dropletAssignedVelocity[i].z = -dir.z*0.5;
 
-                            info.dropletVelocity[i].x = info.dropletAssignedVelocity[i].x;
-                            info.dropletVelocity[i].y = info.dropletAssignedVelocity[i].y;
-                            info.dropletVelocity[i].z = info.dropletAssignedVelocity[i].z;
-                            info.dropletVelocity[i].divideScalar(20);
+                            
 
                             dropletStartTimesAttribute.setX(i,timestamp);
                             info.dropletAlreadyChangeVelocity[i]=false;
@@ -703,10 +711,14 @@ export default () => {
                                 info.dropletVelocity[i].z = info.dropletAssignedVelocity[i].z+(Math.random()-0.5)*0.3;
                                 info.dropletVelocity[i].divideScalar(20);
                                 info.dropletAlreadyChangeVelocity[i] = true;
+                                info.dropletVelocity[i].add(dropletAcc);
                             }
-
-
-                            info.dropletVelocity[i].add(dropletAcc);
+                            else{
+                                info.dropletVelocity[i].y += -0.003;
+                            }
+                            
+                            
+                            
                             
 
                             //##############  rotate the glb ##############

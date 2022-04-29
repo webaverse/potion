@@ -531,14 +531,14 @@ export default () => {
 
             splashStartPoint.copy(localPlayer.position);
             if (localPlayer.avatar) {
-                splashStartPoint.y = localPlayer.avatar.height-0.1;
+                splashStartPoint.y = localPlayer.position.y-0.1;
             }
             splashStartPoint.x+=0.01*currentDir.x;
             splashStartPoint.z+=0.01*currentDir.z;
 
             dropletStartPoint.copy(localPlayer.position);
             if (localPlayer.avatar) {
-                dropletStartPoint.y = localPlayer.avatar.height+0.07;
+                dropletStartPoint.y = localPlayer.position.y+0.07;
             }
             dropletStartPoint.x+=0.01*currentDir.x;
             dropletStartPoint.z+=0.01*currentDir.z;

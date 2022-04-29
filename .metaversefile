@@ -1,5 +1,6 @@
 {
   "name": "potion",
+  "description": "A Potion to maximize the energy",
   "start_url": "potion.glb",
   "components": [
     {

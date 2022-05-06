@@ -16,7 +16,7 @@ const flameTexture2 = textureLoader.load(`${baseUrl}/textures/flame1.png`);
 const noiseMap = textureLoader.load(`${baseUrl}/textures/noise.jpg`);
 const matcapTexture1 = textureLoader.load(`${baseUrl}/textures/matcap4.png`);
 const waveTexture = textureLoader.load(`${baseUrl}/textures/wave2.jpeg`);
-const maskTexture = textureLoader.load(`${baseUrl}/textures/mask3.png`);
+const maskTexture = textureLoader.load(`${baseUrl}/textures/mask4.png`);
 
 const localVector = new THREE.Vector3();
 const localVector2 = new THREE.Vector3();
@@ -109,7 +109,7 @@ export default () => {
     // });
 
     //############################################################### water ########################################################################
-    const waterCount = 20;
+    const waterCount = 30;
     const splashCount = 7;
     const dropletCount = 10;
     const group1=new THREE.Group();
@@ -298,29 +298,48 @@ export default () => {
                             voronoiNoiseTexture,
                             vec2(
                                 vUv.x,
-                                mod(0.25*vUv.y+uTime*0.01,1.)
+                                mod(0.1*vUv.y+uTime*0.01,1.)
                             )
             );
             vec4 simpleNoise = texture2D(
-                            noiseMap,
+                            waveTexture,
                             vec2(
                                 vUv.x,
-                                mod(0.05*vUv.y+uTime*0.05,1.)
+                                mod(2.0*vUv.y+uTime*10.,1.)
+                            )
+            );
+            vec4 flame = texture2D(
+                            flameTexture,
+                            vec2(
+                                vUv.x,
+                                vUv.y
+                            )
+            );
+            vec4 mask = texture2D(
+                            maskTexture,
+                            vec2(
+                                vUv.x,
+                                vUv.y
                             )
             );
                 
-                // voronoiNoise *= voronoiNoise *voronoiNoise * voronoiNoise* voronoiNoise* voronoiNoise;
-                        
-                // vec4 diffuseColor = voronoiNoise + vec4(0.0192, 0.960, 0.819, 1.0);
-                // if(diffuseColor.r < 0.1)
-                //     discard;
-
-                voronoiNoise *= voronoiNoise * voronoiNoise;
-                vec4 diffuseColor = simpleNoise * simpleNoise * voronoiNoise + vec4(0.0192, 0.960, 0.819, 1.0);
+                
+                float powerNum = 1.7 + vRandom;
+                simpleNoise = vec4(pow(simpleNoise.r,powerNum),pow(simpleNoise.g,powerNum),pow(simpleNoise.b,powerNum),pow(simpleNoise.a,powerNum));
+                float powerNum2 = 1.;
+                voronoiNoise = vec4(pow(voronoiNoise.r,powerNum2),pow(voronoiNoise.g,powerNum2),pow(voronoiNoise.b,powerNum2),pow(voronoiNoise.a,powerNum2));
+                vec4 diffuseColor = (simpleNoise  + vec4(0.0192, 0.960, 0.819, 1.0)) * mask;
                 if(diffuseColor.r < 0.1)
                     discard;
                 
                 diffuseColor.a *= vOpacity;
+
+                //float broken;
+                //if(vRandom < 0.9)
+                    //broken = abs( sin( 1.0 - vBroken ) ) - texture2D( noiseMap, mix(vUv, voronoiNoise.rg,0.) ).g;
+                // else
+                //     broken = abs( sin( 1.0 - vBroken ) ) - texture2D( waveTexture, mix(vUv, voronoiNoise.rg,0.) ).g;
+                //if ( broken < 0.01 ) discard;
                
                 
             `
@@ -424,7 +443,7 @@ export default () => {
     };
     //##################################################### load glb #####################################################
     (async () => {
-        const u = `${baseUrl}/assets/cylinder2.glb`;
+        const u = `${baseUrl}/assets/cylinder3.glb`;
         const dustApp = await new Promise((accept, reject) => {
             const {gltfLoader} = useLoaders();
             gltfLoader.load(u, accept, function onprogress() {}, reject);
@@ -610,10 +629,10 @@ export default () => {
                         erosion = 0.7;
                         startErosion = false;
                         lastEmitWater = 0;
-                        maxWaterParticleCount = 1;
+                        maxWaterParticleCount = 2;
                         scene.add(waterMesh);
-                        scene.add(splashMesh);
-                        scene.add(dropletMesh);
+                        // scene.add(splashMesh);
+                        // scene.add(dropletMesh);
                         particleInScene = true;
                     }
                     
@@ -630,8 +649,8 @@ export default () => {
                         matrix.decompose(dummy.position, dummy.quaternion, dummy.scale);
                         if(dummy.position.y < localPlayer.position.y - localPlayer.avatar.height + 0.2 && count< maxWaterParticleCount && timestamp - lastEmitWater > 50){
                             waterOpacityAttribute.setX(i, 0.9);
-                            dummy.scale.x = (0.08+Math.random()*0.1)*(0.22+(Math.random()*0.1))/1.7;
-                            dummy.scale.y = (0.08+Math.random()*0.1)*(0.22+(Math.random()*0.1))/1.7;
+                            dummy.scale.x = (0.04+Math.random()*0.14)*(0.22+(Math.random()*0.1)) / 2;
+                            dummy.scale.y = (0.04+Math.random()*0.14)*(0.22+(Math.random()*0.1)) / 2;
                             dummy.scale.z = (0.2+Math.random()*0.1)*(0.22+(Math.random()*0.1));
                             
                             // dummy.position.x = (Math.random()-0.5)*0.00125;
@@ -652,19 +671,19 @@ export default () => {
                             dir.z=dropletStartPoint.z - localPlayer.position.z;
                             dir.normalize();
 
-                            info.waterVelocity[i].x = -dir.x * 0.2+(Math.random()-0.5)*0.0002;
+                            info.waterVelocity[i].x = -dir.x * 0.2+(Math.random()-0.5)*0.02;
                             info.waterVelocity[i].y = 0;
-                            info.waterVelocity[i].z = -dir.z * 0.2+(Math.random()-0.5)*0.0002;
+                            info.waterVelocity[i].z = -dir.z * 0.2+(Math.random()-0.5)*0.02;
                             info.waterVelocity[i].divideScalar(20);
 
-                            dummy.position.x = dropletStartPoint.x+(Math.random()-0.5)*0.0003;
-                            dummy.position.y = dropletStartPoint.y+(Math.random()-0.5)*0.0003;
-                            dummy.position.z = dropletStartPoint.z+(Math.random()-0.5)*0.0003;
+                            dummy.position.x = dropletStartPoint.x+(Math.random()-0.5)*0.02;
+                            dummy.position.y = dropletStartPoint.y+(Math.random()-0.5)*0.02;
+                            dummy.position.z = dropletStartPoint.z+(Math.random()-0.5)*0.02;
 
-                            waterBrokenAttribute.setX(i,erosion + Math.random()*erosion);
+                            waterBrokenAttribute.setX(i,Math.random()*0.2);
                         
                             waterStartTimesAttribute.setX(i,timestamp);
-                            randomAttribute.setX(i, Math.random() * 0.3);
+                            randomAttribute.setX(i, Math.random());
                             
                             count++;
 

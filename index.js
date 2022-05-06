@@ -17,6 +17,7 @@ const noiseMap = textureLoader.load(`${baseUrl}/textures/noise.jpg`);
 const matcapTexture1 = textureLoader.load(`${baseUrl}/textures/matcap4.png`);
 const waveTexture = textureLoader.load(`${baseUrl}/textures/wave2.jpeg`);
 const maskTexture = textureLoader.load(`${baseUrl}/textures/mask4.png`);
+const maskTexture2 = textureLoader.load(`${baseUrl}/textures/mask3.png`);
 
 const localVector = new THREE.Vector3();
 const localVector2 = new THREE.Vector3();
@@ -43,7 +44,7 @@ export default () => {
   let potionApp = null;
   (async () => {
 
-    let u2 = `${baseUrl}potion.glb`;
+    let u2 = `${baseUrl}potion2.glb`;
     if (/^https?:/.test(u2)) {
         u2 = '/@proxy/' + u2;
     }
@@ -215,7 +216,7 @@ export default () => {
     const splashMaterial = new THREE.MeshBasicMaterial()
     splashMaterial.transparent=true; 
     splashMaterial.depthWrite=false;
-    splashMaterial.alphaMap=noiseMap;
+    //splashMaterial.alphaMap=noiseMap;
     splashMaterial.blending= THREE.AdditiveBlending;
     splashMaterial.side=THREE.DoubleSide;
 
@@ -250,6 +251,9 @@ export default () => {
         },
         maskTexture:{
             value:maskTexture
+        },
+        maskTexture2:{
+            value:maskTexture2
         }
     }
     waterMaterial.onBeforeCompile = shader => {
@@ -328,10 +332,10 @@ export default () => {
                 simpleNoise = vec4(pow(simpleNoise.r,powerNum),pow(simpleNoise.g,powerNum),pow(simpleNoise.b,powerNum),pow(simpleNoise.a,powerNum));
                 float powerNum2 = 1.;
                 voronoiNoise = vec4(pow(voronoiNoise.r,powerNum2),pow(voronoiNoise.g,powerNum2),pow(voronoiNoise.b,powerNum2),pow(voronoiNoise.a,powerNum2));
-                vec4 diffuseColor = (simpleNoise  + vec4(0.0192, 0.960, 0.819, 1.0)) * mask;
+                vec4 diffuseColor = (simpleNoise + vec4(0.0192, 0.960, 0.819, 1.0)) * mask;
                 if(diffuseColor.r < 0.1)
                     discard;
-                
+                //diffuseColor*= vec4(0.0192, 0.960, 0.819, 1.0) * 2.;
                 diffuseColor.a *= vOpacity;
 
                 //float broken;
@@ -355,29 +359,34 @@ export default () => {
     };
     splashMaterial.onBeforeCompile = shader => {
         shader.uniforms.uTime = uniforms.uTime;
-        shader.uniforms.flameTexture = uniforms.flameTexture2;
+        shader.uniforms.flameTexture = uniforms.flameTexture;
         shader.uniforms.gradientNoiseTexture = uniforms.gradientNoiseTexture;
         shader.uniforms.voronoiNoiseTexture = uniforms.voronoiNoiseTexture;
+        shader.uniforms.waveTexture = uniforms.waveTexture;
+        shader.uniforms.maskTexture2 = uniforms.maskTexture2;
         shader.vertexShader =   `
                                     attribute float opacity; 
                                     attribute float broken; 
                                     varying float vOpacity; 
                                     varying float vBroken; 
                                     varying vec3 vPos;
+                                    varying vec2 vUv;
                                 ` + shader.vertexShader;
         shader.vertexShader = shader.vertexShader.replace(
           '#include <begin_vertex>',
-          ['vec3 transformed = vec3( position );', 'vOpacity = opacity; vBroken = broken; vPos = position; vUv = uv;'].join('\n')
+          ['vec3 transformed = vec3( position );', 'vUv = uv; vOpacity = opacity; vBroken = broken; vPos = position; vUv = uv; vUv.y = 1.0-vUv.y;'].join('\n')
         );
         shader.fragmentShader = `
                                     uniform float uTime; 
                                     varying float vBroken;  
                                     varying float vOpacity; 
                                     varying vec3 vPos; 
+                                    varying vec2 vUv;
                                     uniform sampler2D gradientNoiseTexture; 
-                                    uniform sampler2D 
-                                    flameTexture; 
+                                    uniform sampler2D flameTexture; 
+                                    uniform sampler2D waveTexture;
                                     uniform sampler2D voronoiNoiseTexture;
+                                    uniform sampler2D maskTexture2;
                                 ` + shader.fragmentShader; 
 
         shader.fragmentShader = shader.fragmentShader
@@ -391,31 +400,50 @@ export default () => {
                                             mod(0.5*vUv.y+uTime*8.,1.)
                                         )
                 );
-                vec4 voronoiNoise = texture2D(
-                                        voronoiNoiseTexture,
-                                        vec2(
-                                            mod(0.25*vUv.x+uTime*1.,1.),
-                                            mod(0.25*vUv.y+uTime*4.,1.)
-                                        )
-                );
                 vec4 flame = texture2D(
                                         flameTexture,
-                                        mix(vec2(vUv.x,vUv.y),gradientNoise.rg,0.2)
+                                        vUv
                 );
-                voronoiNoise = voronoiNoise * voronoiNoise * gradientNoise * flame;
+                vec4 voronoiNoise = texture2D(
+                                voronoiNoiseTexture,
+                                vec2(
+                                    vUv.x,
+                                    mod(0.2*vUv.y+uTime*0.01,1.)
+                                )
+                );
+                vec4 simpleNoise = texture2D(
+                                waveTexture,
+                                vec2(
+                                    vUv.x,
+                                    mod(1.0*vUv.y+uTime*0.05,1.)
+                                )
+                );
+                vec4 mask = texture2D(
+                                maskTexture2,
+                                vUv
+                );
+
+                float powerNum = 1.9 + vBroken;
+                simpleNoise = vec4(pow(simpleNoise.r,powerNum),pow(simpleNoise.g,powerNum),pow(simpleNoise.b,powerNum),pow(simpleNoise.a,powerNum));
                 
-                //gl_FragColor = voronoiNoise;
-                vec4 diffuseColor = voronoiNoise * 1.5 * vec4(0.0192, 0.960, 0.819, 1.0);
+                vec4 diffuseColor = simpleNoise;
+                diffuseColor *= mask;
+                diffuseColor += vec4(0.0192, 0.960, 0.819, 1.0);
+                if(diffuseColor.r < 0.1 )
+                    discard;
+                
                 diffuseColor.a *= vOpacity;
+                // float broken = abs( sin( 1.0 - vBroken ) ) - texture2D( gradientNoiseTexture, vUv ).g;
+                // if ( broken < 0.0001 ) discard;
             `
         );
-        shader.fragmentShader = shader.fragmentShader.replace(
-            '#include <alphamap_fragment>',
-            [
-                'float broken = abs( sin( 1.0 - vBroken ) ) - texture2D( alphaMap, vUv/1.5 ).g;',
-                'if ( broken < 0.0001 ) discard;'
-            ].join('\n')
-        );
+        // shader.fragmentShader = shader.fragmentShader.replace(
+        //     '#include <alphamap_fragment>',
+        //     [
+        //         'float broken = abs( sin( 1.0 - vBroken ) ) - texture2D( alphaMap, vUv/1.5 ).g;',
+        //         'if ( broken < 0.0001 ) discard;'
+        //     ].join('\n')
+        // );
     };
     dropletMaterial.onBeforeCompile = shader => {
         shader.uniforms.uTime = uniforms.uTime;
@@ -452,6 +480,18 @@ export default () => {
         dustApp.scene.traverse(o => {
             if (o.isMesh) {
                 addInstancedMesh(o.geometry);
+            }
+        });
+    })();
+    (async () => {
+        const u = `${baseUrl}/assets/halfCylinder2.glb`;
+        const dustApp = await new Promise((accept, reject) => {
+            const {gltfLoader} = useLoaders();
+            gltfLoader.load(u, accept, function onprogress() {}, reject);
+            
+        });
+        dustApp.scene.traverse(o => {
+            if (o.isMesh) {
                 addInstancedMesh2(o.geometry);
             }
         });
@@ -564,7 +604,7 @@ export default () => {
 
 
     let maxWaterParticleCount = 2;
-    const maxSplashParticleCount = 2;
+    const maxSplashParticleCount = 1;
     const maxDropletParticleCount = 1;
     let lastSplash = 0;
     let particleInScene = false;
@@ -631,8 +671,8 @@ export default () => {
                         lastEmitWater = 0;
                         maxWaterParticleCount = 2;
                         scene.add(waterMesh);
-                        // scene.add(splashMesh);
-                        // scene.add(dropletMesh);
+                        scene.add(splashMesh);
+                        scene.add(dropletMesh);
                         particleInScene = true;
                     }
                     
@@ -697,11 +737,11 @@ export default () => {
                                     waterCurrentParticleCount--;
                                 waterOpacityAttribute.setX(i, 0.);
                             }
-                            // if(dummy.scale.x < 0.025){
-                            //     dummy.scale.x *= 1.04;
-                            //     dummy.scale.y *= 1.04;
-                            //     dummy.scale.z *= 1.04;
-                            // }
+                            if(dummy.scale.x < 0.023){
+                                dummy.scale.x *= 1.04;
+                                dummy.scale.y *= 1.04;
+                                dummy.scale.z *= 1.04;
+                            }
                             
                             localVector.copy(dummy.position).add(info.waterVelocity[i]);
                             dummy.lookAt(localVector);
@@ -720,11 +760,11 @@ export default () => {
 
                         if(dummy.position.y<localPlayer.position.y - localPlayer.avatar.height && count< maxSplashParticleCount && timestamp - lastSplash > 100){
                             splashOpacityAttribute.setX(i, 0);
-                            dummy.scale.x = (0.07+Math.random()*0.1)*0.3;
-                            dummy.scale.y = (0.07+Math.random()*0.1)*0.3;
-                            dummy.scale.z = (0.2+Math.random()*0.15)*0.3;
+                            dummy.scale.x = (0.07+Math.random()*0.1)*0.15;
+                            dummy.scale.y = (0.07+Math.random()*0.1)*0.15;
+                            dummy.scale.z = (0.15+Math.random()*0.35)*0.3;
 
-                            let rand = (Math.random()-0.5)*0.04;
+                            let rand = (Math.random()-0.5)*0.015;
                             dir.x=splashStartPoint.x-(localPlayer.position.x + rand * localVector2.x);
                             dir.z=splashStartPoint.z-(localPlayer.position.z + rand * localVector2.z);
                             dir.normalize();
@@ -738,7 +778,7 @@ export default () => {
                             info.splashVelocity[i].z= -dir.z * 0.25;
                             info.splashVelocity[i].divideScalar(20);
 
-                            splashBrokenAttribute.setX(i, 0.35 + 0.15 * Math.random());
+                            splashBrokenAttribute.setX(i, Math.random());
                             splashStartTimesAttribute.setX(i, timestamp);
                             
                             count++;
@@ -751,8 +791,8 @@ export default () => {
                             if(timestamp - splashStartTimesAttribute.getX(i)>200){
                                 splashOpacityAttribute.setX(i, 0.4);
                                 dummy.scale.z *= 1.03;
-                                if(splashBrokenAttribute.getX(i)<1)
-                                    splashBrokenAttribute.setX(i,splashBrokenAttribute.getX(i)+0.007);
+                                //if(splashBrokenAttribute.getX(i)<1)
+                                    splashBrokenAttribute.setX(i,splashBrokenAttribute.getX(i)+0.05);
                             }
                                 
                             info.splashVelocity[i].add(splashAcc);
@@ -772,9 +812,9 @@ export default () => {
                         matrix.decompose(dummy.position, dummy.quaternion, dummy.scale);
                         if(dummy.position.y < localPlayer.position.y - localPlayer.avatar.height + 0.2 && count < maxDropletParticleCount){
                             dropletOpacityAttribute.setX(i, 1);
-                            dummy.scale.x = (0.06+Math.random()*0.05)*0.05;
-                            dummy.scale.y = (0.06+Math.random()*0.05)*0.05;
-                            dummy.scale.z = (0.15+Math.random()*0.05)*0.05;
+                            dummy.scale.x = (0.06+Math.random()*0.05)*0.035;
+                            dummy.scale.y = (0.06+Math.random()*0.05)*0.035;
+                            dummy.scale.z = (0.15+Math.random()*0.05)*0.035;
 
 
                             dir.x=dropletStartPoint.x - localPlayer.position.x;
@@ -797,7 +837,7 @@ export default () => {
                             dir.normalize();
 
                             info.dropletAssignedVelocity[i].x = -dir.x*0.5;
-                            info.dropletAssignedVelocity[i].y = Math.random()*0.6;
+                            info.dropletAssignedVelocity[i].y = Math.random()*0.5;
                             info.dropletAssignedVelocity[i].z = -dir.z*0.5;
 
                             

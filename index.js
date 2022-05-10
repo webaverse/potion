@@ -484,19 +484,7 @@ export default () => {
             }
         });
     })();
-    (async () => {
-        const u = `${baseUrl}/assets/droplet.glb`;
-        const dustApp = await new Promise((accept, reject) => {
-            const {gltfLoader} = useLoaders();
-            gltfLoader.load(u, accept, function onprogress() {}, reject);
-            
-        });
-        dustApp.scene.traverse(o => {
-            if (o.isMesh) {
-                addInstancedMesh2(o.geometry);
-            }
-        });
-    })();
+    
     
     (async () => {
         const u = `${baseUrl}/assets/droplet.glb`;
@@ -507,6 +495,7 @@ export default () => {
         });
         dropletApp.scene.traverse(o => {
             if (o.isMesh) {
+                addInstancedMesh2(o.geometry);
                 addInstancedMesh3(o.geometry);
             }
         });
@@ -851,9 +840,9 @@ export default () => {
                             dir.z=dropletStartPoint.z-(localPlayer.position.z + rand * localVector2.z);
                             dir.normalize();
 
-                            info.dropletAssignedVelocity[i].x = -dir.x*0.5;
+                            info.dropletAssignedVelocity[i].x = -dir.x*0.5+(Math.random()-0.5)*0.3;
                             info.dropletAssignedVelocity[i].y = Math.random()*0.5;
-                            info.dropletAssignedVelocity[i].z = -dir.z*0.5;
+                            info.dropletAssignedVelocity[i].z = -dir.z*0.5+(Math.random()-0.5)*0.3;
 
                             
 
@@ -867,9 +856,9 @@ export default () => {
                         if(dummy.position.y>-100){
                             if(timestamp - dropletStartTimesAttribute.getX(i)>130 && !info.dropletAlreadyChangeVelocity[i]){
                                 if(i % 2 === 0){
-                                    info.dropletVelocity[i].x = -dir.x*0.5+(Math.random()-0.5)*0.3;
+                                    info.dropletVelocity[i].x = info.dropletAssignedVelocity[i].x / 1.2;
                                     info.dropletVelocity[i].y = info.dropletAssignedVelocity[i].y;
-                                    info.dropletVelocity[i].z = -dir.z*0.5+(Math.random()-0.5)*0.3;
+                                    info.dropletVelocity[i].z = info.dropletAssignedVelocity[i].z / 1.2;
                                     info.dropletVelocity[i].divideScalar(20);
                                 }
                                 

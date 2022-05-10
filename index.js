@@ -22,6 +22,7 @@ const maskTexture2 = textureLoader.load(`${baseUrl}/textures/mask3.png`);
 const localVector = new THREE.Vector3();
 const localVector2 = new THREE.Vector3();
 const localVector3 = new THREE.Vector3();
+const localVector4 = new THREE.Vector3();
 const localQuaternion = new THREE.Quaternion();
 const backwardVector = new THREE.Vector3(0, 0, 1);
 
@@ -111,8 +112,8 @@ export default () => {
 
     //############################################################### water ########################################################################
     const waterCount = 30;
-    const splashCount = 7;
-    const dropletCount = 10;
+    const splashCount = 12;
+    const dropletCount = 15;
     const group1=new THREE.Group();
     const group2=new THREE.Group();
     let info = {
@@ -308,8 +309,8 @@ export default () => {
             vec4 simpleNoise = texture2D(
                             waveTexture,
                             vec2(
-                                vUv.x,
-                                mod(2.0*vUv.y+uTime*10.,1.)
+                                vUv.x * 0.7,
+                                mod(1.*vUv.y+uTime*7.5,1.)
                             )
             );
             vec4 flame = texture2D(
@@ -414,8 +415,8 @@ export default () => {
                 vec4 simpleNoise = texture2D(
                                 waveTexture,
                                 vec2(
-                                    vUv.x,
-                                    mod(1.0*vUv.y+uTime*0.05,1.)
+                                    vUv.x * 0.5,
+                                    mod(2.0*vUv.y+uTime*5.,1.)
                                 )
                 );
                 vec4 mask = texture2D(
@@ -484,7 +485,7 @@ export default () => {
         });
     })();
     (async () => {
-        const u = `${baseUrl}/assets/halfCylinder2.glb`;
+        const u = `${baseUrl}/assets/droplet.glb`;
         const dustApp = await new Promise((accept, reject) => {
             const {gltfLoader} = useLoaders();
             gltfLoader.load(u, accept, function onprogress() {}, reject);
@@ -607,6 +608,7 @@ export default () => {
     const maxSplashParticleCount = 1;
     const maxDropletParticleCount = 1;
     let lastSplash = 0;
+    let lastDroplet = 0;
     let particleInScene = false;
     let currentDir = new THREE.Vector3();
     let dir = new THREE.Vector3();
@@ -669,7 +671,7 @@ export default () => {
                         erosion = 0.7;
                         startErosion = false;
                         lastEmitWater = 0;
-                        maxWaterParticleCount = 2;
+                        maxWaterParticleCount = 1;
                         scene.add(waterMesh);
                         scene.add(splashMesh);
                         scene.add(dropletMesh);
@@ -687,11 +689,11 @@ export default () => {
                     for (let i = 0; i < waterCount; i++) {
                         waterMesh.getMatrixAt(i, matrix);
                         matrix.decompose(dummy.position, dummy.quaternion, dummy.scale);
-                        if(dummy.position.y < localPlayer.position.y - localPlayer.avatar.height + 0.2 && count< maxWaterParticleCount && timestamp - lastEmitWater > 50){
+                        if(dummy.position.y < localPlayer.position.y - localPlayer.avatar.height + 0.2 && count< maxWaterParticleCount && timestamp - lastEmitWater > 35){
                             waterOpacityAttribute.setX(i, 0.9);
                             dummy.scale.x = (0.04+Math.random()*0.14)*(0.22+(Math.random()*0.1)) / 2;
                             dummy.scale.y = (0.04+Math.random()*0.14)*(0.22+(Math.random()*0.1)) / 2;
-                            dummy.scale.z = (0.2+Math.random()*0.1)*(0.22+(Math.random()*0.1));
+                            dummy.scale.z = (0.2+Math.random()*0.1)*(0.22+(Math.random()*0.1)) / 1.2;
                             
                             // dummy.position.x = (Math.random()-0.5)*0.00125;
                             // dummy.position.y = (Math.random()-0.5)*0.00125;
@@ -723,7 +725,7 @@ export default () => {
                             waterBrokenAttribute.setX(i,Math.random()*0.2);
                         
                             waterStartTimesAttribute.setX(i,timestamp);
-                            randomAttribute.setX(i, Math.random());
+                            randomAttribute.setX(i, Math.random() * 0.8);
                             
                             count++;
 
@@ -758,27 +760,33 @@ export default () => {
                         splashMesh.getMatrixAt(i, matrix);
                         matrix.decompose(dummy.position, dummy.quaternion, dummy.scale);
 
-                        if(dummy.position.y<localPlayer.position.y - localPlayer.avatar.height && count< maxSplashParticleCount && timestamp - lastSplash > 100){
+                        if(dummy.position.y<localPlayer.position.y - localPlayer.avatar.height && count< maxSplashParticleCount && timestamp - lastSplash > 20){
                             splashOpacityAttribute.setX(i, 0);
-                            dummy.scale.x = (0.07+Math.random()*0.1)*0.15;
-                            dummy.scale.y = (0.07+Math.random()*0.1)*0.15;
-                            dummy.scale.z = (0.15+Math.random()*0.35)*0.3;
+                            dummy.scale.x = (Math.random()*0.25)*0.1;
+                            dummy.scale.y = (Math.random()*0.25)*0.1;
+                            dummy.scale.z = (0.15+Math.random()*0.35)*0.2;
 
-                            let rand = (Math.random()-0.5)*0.015;
-                            dir.x=splashStartPoint.x-(localPlayer.position.x + rand * localVector2.x);
-                            dir.z=splashStartPoint.z-(localPlayer.position.z + rand * localVector2.z);
+                            let rand = (Math.random()-0.5)*0.035;
+                            dir.x=dropletStartPoint.x-(localPlayer.position.x + rand * localVector2.x);
+                            dir.z=dropletStartPoint.z-(localPlayer.position.z + rand * localVector2.z);
                             dir.normalize();
 
-                            dummy.position.x = splashStartPoint.x;
-                            dummy.position.y = splashStartPoint.y;
-                            dummy.position.z = splashStartPoint.z;
+                            dummy.position.x = dropletStartPoint.x+(Math.random()-0.5)*0.02;
+                            dummy.position.y = dropletStartPoint.y+(Math.random()-0.5)*0.02;
+                            dummy.position.z = dropletStartPoint.z+(Math.random()-0.5)*0.02;
+
+                            let rand2 =  (Math.random()-0.5);
+                            dummy.rotation.z = rand2 * 2 * Math.PI;
+                            // dummy.position.x = splashStartPoint.x;
+                            // dummy.position.y = splashStartPoint.y;
+                            // dummy.position.z = splashStartPoint.z;
                             
-                            info.splashVelocity[i].x= -dir.x * 0.25;
+                            info.splashVelocity[i].x= -dir.x * 0.2 + (Math.random()-0.5) * 0.02;
                             info.splashVelocity[i].y= Math.random() * 0.15;
-                            info.splashVelocity[i].z= -dir.z * 0.25;
+                            info.splashVelocity[i].z= -dir.z * 0.2 + (Math.random()-0.5) * 0.02;
                             info.splashVelocity[i].divideScalar(20);
 
-                            splashBrokenAttribute.setX(i, Math.random());
+                            splashBrokenAttribute.setX(i, Math.random()*0.3);
                             splashStartTimesAttribute.setX(i, timestamp);
                             
                             count++;
@@ -788,16 +796,23 @@ export default () => {
                             lastSplash = timestamp;
 
                         if(dummy.position.y>-100){
-                            if(timestamp - splashStartTimesAttribute.getX(i)>200){
-                                splashOpacityAttribute.setX(i, 0.4);
+                            if(timestamp - splashStartTimesAttribute.getX(i)>330){
+                                splashOpacityAttribute.setX(i, 0.9);
                                 dummy.scale.z *= 1.03;
                                 //if(splashBrokenAttribute.getX(i)<1)
-                                    splashBrokenAttribute.setX(i,splashBrokenAttribute.getX(i)+0.05);
+                                    splashBrokenAttribute.setX(i,splashBrokenAttribute.getX(i)+0.035);
                             }
-                                
+                               
                             info.splashVelocity[i].add(splashAcc);
                             
-                            localVector.copy(dummy.position).add(info.splashVelocity[i]);
+
+                            //##############  rotate the glb ##############
+                            localVector4.x=0-info.splashVelocity[i].x;
+                            localVector4.y=0-info.splashVelocity[i].y;
+                            localVector4.z=0-info.splashVelocity[i].z;
+
+
+                            localVector.copy(dummy.position).add(localVector4);
                             dummy.lookAt(localVector);
                             dummy.position.add(info.splashVelocity[i]);
                             dummy.updateMatrix();
@@ -810,11 +825,11 @@ export default () => {
                     for (let i = 0; i < dropletCount; i++) {
                         dropletMesh.getMatrixAt(i, matrix);
                         matrix.decompose(dummy.position, dummy.quaternion, dummy.scale);
-                        if(dummy.position.y < localPlayer.position.y - localPlayer.avatar.height + 0.2 && count < maxDropletParticleCount){
+                        if(dummy.position.y < localPlayer.position.y - localPlayer.avatar.height + 0.2 && count < maxDropletParticleCount && timestamp - lastDroplet > 50){
                             dropletOpacityAttribute.setX(i, 1);
-                            dummy.scale.x = (0.06+Math.random()*0.05)*0.035;
-                            dummy.scale.y = (0.06+Math.random()*0.05)*0.035;
-                            dummy.scale.z = (0.15+Math.random()*0.05)*0.035;
+                            dummy.scale.x = (0.06+Math.random()*0.05)*0.1;
+                            dummy.scale.y = (0.06+Math.random()*0.05)*0.1;
+                            dummy.scale.z = (0.15+Math.random()*0.05)*0.1;
 
 
                             dir.x=dropletStartPoint.x - localPlayer.position.x;
@@ -847,12 +862,14 @@ export default () => {
 
                             count++;
                         }
+                        if(count > maxDropletParticleCount)
+                            lastDroplet = timestamp;
                         if(dummy.position.y>-100){
-                            if(timestamp - dropletStartTimesAttribute.getX(i)>100 && !info.dropletAlreadyChangeVelocity[i]){
+                            if(timestamp - dropletStartTimesAttribute.getX(i)>130 && !info.dropletAlreadyChangeVelocity[i]){
                                 if(i % 2 === 0){
-                                    info.dropletVelocity[i].x = info.dropletAssignedVelocity[i].x+(Math.random()-0.5)*0.3;
+                                    info.dropletVelocity[i].x = -dir.x*0.5+(Math.random()-0.5)*0.3;
                                     info.dropletVelocity[i].y = info.dropletAssignedVelocity[i].y;
-                                    info.dropletVelocity[i].z = info.dropletAssignedVelocity[i].z+(Math.random()-0.5)*0.3;
+                                    info.dropletVelocity[i].z = -dir.z*0.5+(Math.random()-0.5)*0.3;
                                     info.dropletVelocity[i].divideScalar(20);
                                 }
                                 
@@ -860,31 +877,33 @@ export default () => {
                             }
                            
                             if(info.dropletAlreadyChangeVelocity[i]){
-                                if(dropletOpacityAttribute.getX(i)>0)
-                                    dropletOpacityAttribute.setX(i, dropletOpacityAttribute.getX(i)-0.03*Math.random());
+                                
+                                if(dropletOpacityAttribute.getX(i)>0 && i % 2 === 0)
+                                    dropletOpacityAttribute.setX(i, dropletOpacityAttribute.getX(i)-0.04);
                             }
                             
-                            info.dropletVelocity[i].add(dropletAcc);
-                            
-                            
-
-                            //##############  rotate the glb ##############
-                            localVector2.x=0-info.dropletVelocity[i].x;
-                            localVector2.y=0-info.dropletVelocity[i].y;
-                            localVector2.z=0-info.dropletVelocity[i].z;
-
-                            if(dummy.scale.x<0.02){
-                                dummy.scale.x +=0.0045/2;
-                                dummy.scale.y +=0.0045/2;
+                            if(dummy.scale.x<0.015){
+                                dummy.scale.x +=0.0045/2.5;
+                                dummy.scale.y +=0.0045/2.5;
                                 dummy.scale.z +=0.0135/2;
                             }
-                            else if(dummy.scale.x>=0.02){
-                                dummy.scale.x /=(1 + Math.random()*0.05);
-                                dummy.scale.y /=(1 + Math.random()*0.05);
-                                dummy.scale.z *=(1 + Math.random()*0.05);
-                            }
+                            // else if(dummy.scale.x>=0.02){
+                            //     dummy.scale.x /=(1 + Math.random()*0.05);
+                            //     dummy.scale.y /=(1 + Math.random()*0.05);
+                            //     dummy.scale.z *=(1 + Math.random()*0.05);
+                            // }
+                            if(i % 3 === 0)
+                                dummy.scale.z *= 1.03;
 
-                            localVector.copy(dummy.position).add(localVector2);
+                            info.dropletVelocity[i].add(dropletAcc);
+
+                            //##############  rotate the glb ##############
+                            localVector4.x=0-info.dropletVelocity[i].x;
+                            localVector4.y=0-info.dropletVelocity[i].y;
+                            localVector4.z=0-info.dropletVelocity[i].z;
+
+
+                            localVector.copy(dummy.position).add(localVector4);
                             dummy.lookAt(localVector);
                             dummy.position.add(info.dropletVelocity[i]);
                             dummy.updateMatrix();

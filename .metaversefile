@@ -1,8 +1,27 @@
 {
   "name": "potion",
   "description": "A Potion to maximize the energy",
-  "start_url": "potion.glb",
+  "start_url": "index.js",
   "components": [
+    {
+      "key":"potion",
+      "value":{
+        "fluidNode": "fluid",
+        "potionName": "Healing Potion",
+        "emptyName": "Empty Bottle",
+        "effect": "cure",
+        "stats":{
+          "hp":50,
+          "mp":0,
+          "atk":0,
+          "vit":0,
+          "dex":0,
+          "def":0,
+          "spr":0,
+          "lck":0
+        }
+      }
+    },
     {
       "key": "wear",
       "value": {

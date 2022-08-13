@@ -46,7 +46,6 @@ export default e => {
     const _drinkPotion = (timeDiff) =>{
         // TimeDiff is in miliseconds, multiply it by 0.001 to get it in seconds
         triggerTime -= timeDiff * 0.001;
-
         if (triggerTime < 0){
 
             _triggerPotionEffect(effect || 'cure');
@@ -58,7 +57,6 @@ export default e => {
 
     // Set the fluid scale depending on the time user has used the potion
     const _setFluidScale = (scale) => {
-
         // Set it only in y value, in your 3d model application make sure the pivot of the fluid is in the bottom of the fluid model
         if (fluid) 
             fluid.scale.set(1,scale,1);
@@ -86,7 +84,6 @@ export default e => {
     useFrame(({timeDiff})=>{
         // Action "use" is valid everytime the user is clicking while wearing in hand anything that can be used, so make sure you're also validating user is wearing this app
         if (wearing && localPlayer.getAction('use')){
-            
             _drinkPotion(timeDiff);
         }
         // If user does not click for at least the trigger time, reset to original state of the fluid and the triggerTime counter

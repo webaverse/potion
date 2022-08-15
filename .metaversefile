@@ -1,5 +1,5 @@
 {
-  "name": "potion",
+  "name": "Healing Potion",
   "description": "A Potion to maximize the energy",
   "start_url": "index.js",
   "components": [
@@ -7,7 +7,6 @@
       "key":"potion",
       "value":{
         "fluidNode": "fluid",
-        "potionName": "Healing Potion",
         "emptyName": "Empty Bottle",
         "effect": "cure",
         "stats":{

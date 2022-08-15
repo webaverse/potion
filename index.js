@@ -10,9 +10,7 @@ export default e => {
     const localPlayer = useLocalPlayer();
 
     const potionData = app.getComponent("potion") || {};
-    const{fluidName, potionName, emptyName, effect, stats } = potionData;
-
-    app.name = potionName || "Potion";
+    const{fluidName, emptyName, effect, stats } = potionData;
     
     let triggerTime,initialTime = 1.2;  // In seconds / save twice to normalize later
     let fluid = null;                   // The 3d model of the fluid inside the gltf file
@@ -65,7 +63,7 @@ export default e => {
     // The actual trigger, here is what happens when the user finish triggering the potion
     const _triggerPotionEffect = (useEffect) =>{
 
-        // Visual effects of the potion
+        // Visual effects over the player when finishing the potion
         const effectAction = {
             type: useEffect
         };
@@ -86,7 +84,7 @@ export default e => {
         if (wearing && localPlayer.getAction('use')){
             _drinkPotion(timeDiff);
         }
-        // If user does not click for at least the trigger time, reset to original state of the fluid and the triggerTime counter
+        // If user does not click for at least the trigger time, reset to original state of the fluid (scale it to 1) and the triggerTime counter to initial time
         else{
             if (triggerTime != initialTime) {
                 triggerTime = initialTime;
